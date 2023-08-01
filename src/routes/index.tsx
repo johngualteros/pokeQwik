@@ -1,8 +1,9 @@
 import { $, component$, useSignal } from "@builder.io/qwik";
-import { Link, type DocumentHead } from "@builder.io/qwik-city";
+import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
 import { PokemonImage } from "~/components/pokemons/pokemon-image";
 
 export default component$(() => {
+  const nav = useNavigate();
   const pokemonId = useSignal<number>(1);
   const showBackImage = useSignal<boolean>(false);
   const revealPokemon = useSignal<boolean>(false);
@@ -12,19 +13,25 @@ export default component$(() => {
     pokemonId.value += value;
   });
 
+  const goToPokemon = $(() => {
+    nav(`/pokemon/${pokemonId.value}/`);
+  });
+
   return (
     <>
       <span class="text-2xl font-bold">Simple Search</span>
       <span class="text-9xl">{pokemonId}</span>
 
-      <Link href={`/pokemon/${pokemonId.value}/`}>
+      {/* <Link href={`/pokemon/${pokemonId.value}/`}> */}
+      <div class="cursor-pointer" onClick$={async () => await goToPokemon()}>
         <PokemonImage
           pokemonId={pokemonId.value}
           size={200}
           backImage={showBackImage.value}
           reveal={revealPokemon}
           />
-      </Link>
+      </div>
+      {/* </Link> */}
 
       <div>
         {/* $symbol is lazy load for qwik */}

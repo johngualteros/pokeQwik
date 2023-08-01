@@ -26,8 +26,8 @@ export const PokemonImage = component$(
           style={{ width: `${size ?? 200}px` }}
           onLoad$={() => imageLoaded.value = true}
           class={{
-            'hidden': !imageLoaded.value,
-            'brightness-0': reveal!.value ?? false,
+            'hidden': !imageLoaded.value ?? false,
+            'brightness-0': reveal?.value ?? false,
           }}
         />
       </div>
