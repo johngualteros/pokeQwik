@@ -1,11 +1,11 @@
 /* eslint-disable qwik/jsx-img */
-import { type Signal, component$, useSignal, useTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useTask$, useComputed$ } from "@builder.io/qwik";
 
 interface PokemonImageProps {
   pokemonId: number;
   size?: number;
   backImage?: boolean;
-  reveal?: Signal<boolean>;
+  reveal?: boolean;
 }
 
 export const PokemonImage = component$(
@@ -17,17 +17,23 @@ export const PokemonImage = component$(
       imageLoaded.value = false;
     });
 
+    const imageUrl = useComputed$(() => {
+      return (backImage) ?
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png` :
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`;
+    })
+
     return (
       <div class='flex items-center justify-center' style={{width: `${size}px`, height: `${size}px`}}>
         <span>{ imageLoaded.value ? '' : 'Cargando...'}</span>
         <img
-          src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${backImage ? 'back/' : ''}${pokemonId}.png`}
+          src={imageUrl.value}
           alt="Pokemon"
           style={{ width: `${size ?? 200}px` }}
           onLoad$={() => imageLoaded.value = true}
           class={{
             'hidden': !imageLoaded.value ?? false,
-            'brightness-0': reveal?.value ?? false,
+            'brightness-0': reveal ?? false,
           }}
         />
       </div>
