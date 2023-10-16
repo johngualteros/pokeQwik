@@ -1,6 +1,8 @@
-import { component$, useComputed$ } from '@builder.io/qwik';
+import { $, component$, useComputed$, useSignal, useStore, useVisibleTask$ } from '@builder.io/qwik';
 import { Link, type DocumentHead, routeLoader$, useLocation } from '@builder.io/qwik-city';
 import { PokemonImage } from '~/components/pokemons/pokemon-image';
+import { Modal } from '~/components/shared';
+import { getFunFactAboutPokemon } from '~/helpers/get-chatgpt-response';
 import { getSmallPokemons } from '~/helpers/get-pokemons';
 import type { SmallPokemon } from '~/interfaces';
 
@@ -12,20 +14,49 @@ export const usePokemonList = routeLoader$<SmallPokemon[]>(async ({ query, redir
   if(offset < 0) {
     redirect(301, pathname);
   }
-  // const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=10&offset=${offset}`);
-  // const data = await response.json() as PokemonListResponse;
-  // return data.results;
   return getSmallPokemons(offset);
 });
 
 export default component$(() => {
     const pokemons = usePokemonList();
     const location = useLocation();
+    const modalVisible = useSignal(false);
+    const modalPokemon = useStore({
+      id: 0,
+      name: '',
+    });
+
+    const funFactPokemonOpenAIResponse = useSignal('');
 
     const currentOffset = useComputed$<number>(()=> {
       const offsetString = new URLSearchParams(location.url.search);
       const offset = offsetString.get('offset');
       return Number(offset || '0');
+    })
+
+    // Modal functions
+    const showModal = $((id: string, name: string) => {
+      modalPokemon.id = Number(id);
+      modalPokemon.name = name;
+      modalVisible.value = true;
+    });
+
+    const closeModal = $(() => {
+      modalVisible.value = false;
+    });
+
+
+    useVisibleTask$(({track}) => {
+      track(() => {
+        modalPokemon.name;
+      })
+      funFactPokemonOpenAIResponse.value = '';
+      if(modalPokemon.name.length >0) {
+        getFunFactAboutPokemon(modalPokemon.name)
+          .then((response) => {
+            funFactPokemonOpenAIResponse.value = response;
+          });
+      }
     })
 
     return (
@@ -51,14 +82,22 @@ export default component$(() => {
         <div class="grid grid-cols-6 mt-5">
           {
             pokemons.value.map((pokemon: any) => (
-              <div class="m-5 flex flex-col justify-center items-center" key={pokemon.name}>
+              <div class="m-5 flex flex-col justify-center items-center" key={pokemon.name} onClick$={() => showModal(pokemon.id, pokemon.name)} >
                 {/* <img src={pokemon.url} alt={pokemon.name} width={200} height={200}/> */}
-                <PokemonImage pokemonId={pokemon.id} />
+                <PokemonImage pokemonId={pokemon.id}/>
                 <span class="capitalize">{pokemon.name}</span>
               </div>
             ))
           }
         </div>
+
+        <Modal showModal={modalVisible.value} closeFn={closeModal} persistent>
+          <span q:slot='title'>{modalPokemon.name}</span>
+          <div q:slot='content'>
+            <PokemonImage pokemonId={modalPokemon.id} />
+            { funFactPokemonOpenAIResponse.value === '' ? 'Asking to the AI' : funFactPokemonOpenAIResponse.value}
+          </div>
+        </Modal>
       </>
     );
 });

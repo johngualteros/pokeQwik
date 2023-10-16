@@ -24,13 +24,14 @@ export const PokemonImage = component$(
     })
 
     return (
-      <div class='flex items-center justify-center' style={{width: `${size}px`, height: `${size}px`}}>
+      <div class='flex items-center justify-center' style={{width: `200px`, height: `200px`}}>
         <span>{ imageLoaded.value ? '' : 'Cargando...'}</span>
         <img
           src={imageUrl.value}
           alt="Pokemon"
-          style={{ width: `${size ?? 200}px` }}
           onLoad$={() => imageLoaded.value = true}
+          width='200'
+          height='200'
           class={{
             'hidden': !imageLoaded.value ?? false,
             'brightness-0': reveal ?? false,
